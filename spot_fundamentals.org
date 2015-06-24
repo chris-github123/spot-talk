@@ -1,0 +1,216 @@
+#+TITLE: Core Concepts in Data Technologies
+#+AUTHOR:    Matthew Henderson, PhD, FCACB
+#+EMAIL:     matthew@darwin.local
+#+DATE:      \today
+:PROPERTIES:
+#+DRAWERS: LOGBOOK CLOCK HIDDEN PROPERTIES
+#+DESCRIPTION:
+#+STARTUP: overview
+#+STARTUP: hidestars
+#+STARTUP: indent
+#+KEYWORDS:
+#+LANGUAGE:  en
+#+OPTIONS:   H:2 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:t ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:
+#+LINK_HOME:
+#+XSLT:
+#+STARTUP: beamer
+#+LaTeX_CLASS: beamer
+# #+LaTeX_CLASS_OPTIONS: [smaller]
+#+BEAMER_FRAME_LEVEL: 2
+#+latex_header: \mode<beamer>{\usetheme{Antibes}}
+#+latex_header: \hypersetup{colorlinks,linkcolor=,urlcolor=blue}
+#+LaTeX_header: \usepackage{textpos}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_header: \usepackage[labelfont=bf,format=hang,margin=10pt,labelsep=period]{caption,subfig}
+#+LaTeX_HEADER: \usemintedstyle{tango}
+#+LaTex_HEADER: \usepackage[usenames,dvipsnames]{xcolor}
+#+LaTeX_HEADER: \usepackage{tikz}
+#+LaTeX_HEADER: \usetikzlibrary{shapes,backgrounds}
+#+LaTeX_HEADER: \usepackage{tikz-uml}
+#+LaTeX_HEADER: \usepackage[T1]{fontenc}
+#+LaTeX_HEADER: \usepackage{lmodern}
+#+LaTeX_HEADER: \usepackage{verbatim}
+#+LaTeX_HEADER: # \input{./figures/titlepage}
+:END:
+
+#+BEGIN_LaTeX
+\logo{%
+\makebox[0.95\paperwidth-5pt]{%
+\includegraphics[width=1cm,keepaspectratio]{/Users/matthew/Documents/TOH/logos/eorla_logo.png}
+\hfill
+\includegraphics[width=1cm]{/Users/matthew/Documents/TOH/logos/UOlogoBW.eps}}}
+\beamertemplatenavigationsymbolsempty
+\setbeamertemplate{caption}[numbered]
+\setbeamerfont{caption}{size=\tiny}
+#+END_LaTeX
+# xelatex --shell-escape -interaction=nonstopmode MPAH_cscc_2014.tex
+
+* Regnum Data Clinica Laboratorium
+** Regnum Animale
+#+ATTR_LaTeX: width=\textwidth
+ [[file:./figures/Regnum_Animale.png]]
+
+** Information Systems Design
+*** Single Point of Truth
+**** The practice of structuring information models such that every data element is stored exactly once
+*** Have you looked at your shared network drive lately?
+** Laboratory Data Sources
+\centering
+\include{./figures/venn-diagram}
+** A Unique Combination of Features
+#+ATTR_LaTeX: width=\textwidth
+ [[file:./figures/Platypus-sketch.jpg]]
+ \tiny
+ \centering
+ A venomous, electrolocating, egg-laying, duck-billed, beaver-tailed, otter-footed mammal
+* Fundamental Tools for Data Management
+** Fundamental Tools for Data Management
+*** Plain text (2)
+*** Version control (4)
+*** Automated Back-up system (1)
+*** Relational Database (3)
+*** Automation (5)
+** Why these tools
+\centering
+\include{./figures/gnuplot-basics}
+*** Developed and used by programmers
+** Plain Text
+*** Simple data formats: .txt, .csv
+**** Read by computers and humans alike.
+**** Text editors i.e. [[https://notepad-plus-plus.org/][Notepad++]]
+*** Compatibility and Longevity
+**** Sophisticated tool chains have been created to manage plain text files
+**** 20 year old method validation data - no problem
+***** bit rot - .wpd, .doc, .docx, .docxm ([[https://en.wikipedia.org/wiki/List_of_file_formats#Document][list]])
+** Plain Text
+*** Source code
+*** Markup Languages
+**** HTML, XML
+*** Structured Text
+**** HL7, SNOMED CT,  LOINC
+** Version Control
+\include{./figures/vcd_feature_synch}
+*** Document control software
+*** Cloud storage services
+*** [[https://git-scm.com][Git]]
+** Automated Back-up
+*** text                                            :BMCOL:B_ignoreheading:
+:PROPERTIES:
+:BEAMER_col: .5
+:BEAMER_env: ignoreheading
+:END:
+*** Automate it!
+*** Test your system before you need it
+*** Encripted cloud storage
+**** [[https://spideroak.com/][SpiderOak]]
+*** image                                           :BMCOL:B_ignoreheading:
+:PROPERTIES:
+:BEAMER_col: .5
+:BEAMER_env: ignoreheading
+:END:
+\include{./figures/disc}
+** Relational Database
+*** A collection of data tables
+*** The tables are part of a *Data Model* called a *Schema*
+*** The data model defines:
+**** The type of data stored in each column
+**** The relationship between tables
+** Data Model
+*** Entities - samples, physicians, patients, results
+*** Attributes - names, values, units, reference intervals,
+*** Relationships
+**** Samples come from Patients
+**** Results come from Samples
+*** Cardinality
+**** Patients can have multiple samples
+**** Samples can have multiple tests
+**** Each sample will have only one creatinine
+** Schema
+\centering
+\include{./figures/basic_uml}
+
+** Database Operations: Structured Query Language
+- Filter :: subsetting or removing observations based on some condition
+  - select, where
+- Transform :: adding or modifying variables.
+  - functions
+- Aggregate :: reducing multiple values into a single value
+  - count, mean, sum with group by
+- Sort :: changing the order of observations
+  - order by
+** Query the Database
+- A month of HbA1c results from the Endo clinic
+#+BEGIN_SRC mysql
+SELECT r.result, r.verified, s.mrn, s.location, p.name
+FROM results as r
+INNER JOIN sample as s
+ON r.accession = s.accession
+INNER JOIN physician as p
+ON s.provider = p.name
+WHERE r.test = 'HbA1c' and
+s.location = 'ENDO'
+r.verified <= (NOW() - INTERVAL 1 MONTH);
+#+END_SRC
+** Output from the database
+\scriptsize
+\centering
+#+BEGIN_EXAMPLE
+|----------+---------------------+----------+------------+-------------------|
+| r.result | r.verified          |    s.mrn | s.location | p.name            |
+|----------+---------------------+----------+------------+-------------------|
+|    0.057 | 2015-05-23 09:04:33 |  9897885 | RKU        | SYSTEM            |
+|    0.062 | 2015-05-23 07:04:59 | 36286359 | ICUS       | MCINTYRE LAURALYN |
+|    0.087 | 2015-05-23 08:04:49 | 10809952 | AKU        | BUGEJA ANN        |
+|    0.046 | 2015-05-23 08:04:41 |  3935467 | 5AMA       | SYSTEM            |
+|    0.083 | 2015-05-23 11:04:09 | 22183552 | 5NES       | DUGAN ALISON      |
+|    0.070 | 2015-05-23 10:04:00 | 34028241 | A2         | BRANDYS TIM       |
+|    0.064 | 2015-05-23 08:04:46 | 33788977 | H4         | MASTERS ROY       |
+|    0.068 | 2015-05-23 08:04:19 | 10737872 | H5         | SYSTEM            |
+|    0.079 | 2015-05-23 08:04:45 |  2662492 | H5         | SYSTEM            |
+|    0.064 | 2015-05-24 01:04:51 | 36321669 | H5         | SYSTEM            |
+...
+#+END_EXAMPLE
+
+** Query the Database
+- Top ten ordering physicians
+#+BEGIN_SRC mysql
+SELECT count(test) as count, p.name
+FROM results as r
+INNER JOIN sample as s
+on r.accession = s.accession
+INNER JOIN provider as p
+on s.provider = p.name
+WHERE r.test = 'HbA1c' and r.verified <= (NOW() - INTERVAL 1 MONTH)
+group by p.name order by count desc;
+#+END_SRC
+
+** Output from the database
+\scriptsize
+\centering
+#+BEGIN_EXAMPLE
+|-------+---------------------------|
+| count | p.name                    |
+|-------+---------------------------|
+|  1310 | EORLA PHYSICIAN           |
+|   843 | SYSTEM                    |
+|   108 |                           |
+|    99 | DENT ROBERT R M           |
+|    78 | OLEARY TIMOTHY            |
+|    73 | KEELY ERIN                |
+|    64 | ARNAOUT AMEL              |
+|    51 | HIERLIHY PHYLLIS          |
+|    46 | DE MEULEMEESTER CHRISTINE |
+|    44 | MALCOLM JANINE            |
+...
+#+END_EXAMPLE
+
+** Basic scripting
+
+** References
+Introduction to Data Technologies
+https://www.stat.auckland.ac.nz/~paul/ItDT/
